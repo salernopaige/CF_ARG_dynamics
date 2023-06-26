@@ -1,2 +1,2 @@
-# 16S_dynamics
-Exploring microbiome dynamics using 16S datasets across various age groups and disease states
+# CF_ARG_dynamics
+Exploring the antibiotic resistance dynamics in infants with CF as well as non-CF infants using shotgun metagenomic sequencing data. 
