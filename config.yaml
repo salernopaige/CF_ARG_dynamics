@@ -1,92 +1,57 @@
 #expt_name: "dart_CF"
-expt_name: "Hayden"
+#expt_name: "Hayden"
 #expt_name: "Yassour"
 #expt_name: "Kostic"
-#expt_name: "HMP"
-#expt_name: "MetaHit"
 #expt_name: "Vatanen"
-#expt_name: "Core_sequenced_DartCF"
-#expt_name: "Hayden"
 #expt_name: "Backhed"
 #expt_name: "TEDDY"
 #expt_name: "Leonard"
+expt_name: "Li"
 
-#indir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/ReadData/" # Where the fastq sequencing files are stored
-indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/HMP/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Metahit/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/ReadData/" # Where the fastq sequencing files are stored
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/ReadData/" # Where the fast sequencing files are stored
+#Input directories, where the fastq sequencing files are stored
+#indir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/ReadData/"
+indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/ReadData/"
 
-#outdir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results/" #Where your results are to be stored
-outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/" # Where the results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results/" # Where the results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/Results/" # Where the results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/HMP/Results/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Metahit/Results/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/Results/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/" # Where the fastq sequencing files are stored
-#outdir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/Results" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/Results/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/Results/" #Where your results are to be stored
-#outdir : "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/Results/" #Where your results are to be stored
-
-# Out directories for rarified results
-#outdir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results_Rarified/" #Where your results are to be stored
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results_Rarified/"
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results_Rarified/"
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/Results_Rarified/"
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/Results_Rarified/"
-#outdir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/Results_Rarified/"
-
-#rare_indir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/ReadData_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/ReadData_Rarified/"
-#outdir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/Results_Rarified/"
-#rare_indir: "/dartfs/rc/lab/R/RossB/Core_seq_meta_210311/ReadData_Rarified/"
+#Output directories, where files are to be stored
+#outdir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/Results/"
+outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/"
 
 samples_sub:
-#    - 'SRS064276'
-#    - 'SRS063985'
-#    - 'SRS024132'
+
 samples_ignore:
-    #- "021721_100"
-    #- "021721_147"
-    #- "021721_71"
-    #- "021721_67"
-    #- "021721_39"
-    #- "021721_74"
-    #- "021721_170"
+
 samples_dir_regex: #If you put something in here, like SRS[0-9]+, it will use that regex to find the sample directories
+
 original_files_R1_identifier: ".1." #"_R1" #Uses this to identify the original R1 files and makes a link. Assumes we can change 1->2 to get the R2
+
 #Quality trimming options
 qtrim: "rl" #Trim both sides
 quality: 12 #Trim bases below this quality score
 quality_read: 12 #Feature counts will ignore reads below this quality score
 read_min_len: 20 #Exclude reads below this length
-adaptors: 'Data/adapters.fa' #Path to the adaptors that are trimmed by bbduk
-human_genome: 'Data/hg19.fa.masked' #Path to the reference human genome used to remove human dna contamination
+adaptors: '/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/adapters.fa' #Path to the adaptors that are trimmed by bbduk
+human_genome: '/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/hg19.fa.masked' #Path to the reference human genome used to remove human dna contamination
 
 # Bowtie options
 n_mismatch: 1
 #DB_name: "BFT"
-#DB_path: "Data/BFT_isoforms.fasta"
-DB_name: "BfrMarkers"
-DB_path: "/dartfs-hpc/rc/home/p/f004mjp/Sequences/MetaPhlanMarkers_RepGenome.fasta"
-#DB_name: "GA3Struct"
-#DB_path: "/dartfs-hpc/rc/home/p/f004mjp/Sequences/GA3_structural.fasta"
+#DB_path: "/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/BFT_isoforms.fasta"
 
 n_cores: 4
 
@@ -99,8 +64,6 @@ metaphlan_col: "relative_abundance" # Default is relative_abundance. Use estimat
 # Everything
 mode: "se"
 
-# MetaSpades
-skip_read_correction: False #On some samples the read correction stalls out and the job hangs until it times out. This option is a work around
 
 # Shortbred
-markers: "Data/shortbred_markers.faa"
+markers: "/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/shortbred_markers.faa"

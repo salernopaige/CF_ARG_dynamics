@@ -1,4 +1,5 @@
-# Adrian Verster, March 2021
+# Paige Salerno, June 2023
+# Snakemake skeleton, Metaphlan, and Bowtie code taken from Adrian Verster's shotgun_metagenomics repo
 # You should have downloaded the metaphlan database by running "metaphlan --install"
 
 # You might need to make the index yourself if there are no rev files
@@ -17,10 +18,6 @@ configfile: "config.yaml"
 
 indir = Path(config["indir"])
 outdir = Path(config["outdir"])
-if "rare_indir" in config:
-    rare_indir=Path(config["rare_indir"])
-else:
-    rare_indir=None
 
 if config["samples_sub"] is not None:
     SAMPLES = config["samples_sub"]
@@ -39,25 +36,10 @@ rule all:
         expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
         expand("%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
         expand("%s/counts_{DB_name}_combined.csv" %(outdir), DB_name=config["DB_name"]),
-        expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(rare_indir), sample=SAMPLES),
         "%s/%s_metaphlan_combined_s.xlsx" %(outdir, config["expt_name"]),
         "%s/%s_metaphlan_combined_f.xlsx" %(outdir, config["expt_name"]),
-        "%s/humann/" %(outdir),
-        expand("%s/humann/{sample}_R1.qc.humanDecontaminated_genefamilies.tsv" %(outdir), sample=SAMPLES),
-        expand("%s/humann/{sample}_R1.qc.humanDecontaminated_pathcoverage.tsv" %(outdir), sample=SAMPLES),
-        expand("%s/humann/{sample}_R1.qc.humanDecontaminated_pathabundance.tsv" %(outdir), sample=SAMPLES),
-        "%s/humann/humann_genefamilies.tsv" %(outdir),
-        "%s/humann/humann_pathcoverage.tsv" %(outdir),
-        "%s/humann/humann_pathabundance.tsv" %(outdir),
-	"%s/humann_genefamilies_relab.tsv" %(outdir),
-        "%s/humann_pathcoverage_relab.tsv" %(outdir),
-        "%s/humann_pathabundance_relab.tsv" %(outdir),
-        "%s/humann_genefamilies_relab_regroup.tsv" %(outdir),
-        "%s/humann_genefamilies_relab_rename.tsv" %(outdir),
         expand("%s/shortbred/{sample}_shortbred_results.txt" %(outdir), sample=SAMPLES),
-        "%s/RGI/" %(outdir),
-        expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq" %(indir), sample=SAMPLES),
-        "%s/nonpareil/" %(outdir)
+        "%s/RGI/" %(outdir)
 
 # Makes links to the base library so that they are named consistently with the folder names
 # Snakemake works really well if we have files that go {sample}/{sample}.fastq.gz
@@ -125,20 +107,6 @@ rule remove_human:
     run:
         # Following the parameters from http://seqanswers.com/forums/showthread.php?t=42552
         shell("bbmap.sh minid=0.95 maxindel=3 bwr=0.16 bw=12 quickmatch fast minhits=2 ref={params.human} -Xmx32g in={input.R1} outu={output.R1} outm={output.R1_Human} in2={input.R2} outu2={output.R2} outm2={output.R2_Human} threads={params.cores}")
-
-# To perform rarified analysis, we need to randomly select a specific number of reads from every sample
-# Need to make rare_indir "ReadData_Rarified" for this step, then set outdir to "Results_Rarified" for remaining rules
-
-rule subsample_fastq:
-    input:
-        "%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
-    output:
-        "%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(rare_indir),
-    resources:
-        mem="64G",
-        cpus=config["n_cores"]
-    run:
-        shell("zcat {input} | seqkit sample -n 5000000 -o {output}")
 
 # Runs metphlan on a single sample
 # Please note that the use of paired-ends is an illusion, they are combined and both used single end
@@ -278,197 +246,9 @@ rule pileup_all:
     input:
         expand("%s/{sample}/{sample}_Bowtie_{DB_name}.pileup" %(outdir), sample = SAMPLES, DB_name=config["DB_name"])
 
-# Runs humann on all samples
-rule humann:
-    input:
-        unpack(input_reads)
-    params:
-        outdir=directory("%s/humann/" %(outdir)),
-    output:
-        gene="%s/humann/{sample}_R1.qc.humanDecontaminated_genefamilies.tsv" %(outdir),
-        cov="%s/humann/{sample}_R1.qc.humanDecontaminated_pathcoverage.tsv" %(outdir),
-        ab="%s/humann/{sample}_R1.qc.humanDecontaminated_pathabundance.tsv" %(outdir),
-    resources:
-        mem="40G",
-        cpus=config["n_cores"],
-        time="72:00:00"
-    params:
-        ncores=config["n_cores"]
-    run:
-        if config["mode"] == "pe":
-            raise Exception('Not going to run humann on R2')
-        shell("humann -i {input.R1} -o {params.outdir} --input-format fastq.gz --remove-temp-output --resume")
-
-# Joins normalized tables into one file
-rule humann_combine:
-    input:
-        infiles_gene=expand("%s/humann/{sample}_R1.qc.humanDecontaminated_genefamilies.tsv" %(outdir), sample=SAMPLES),
-        infiles_cov=expand("%s/humann/{sample}_R1.qc.humanDecontaminated_pathcoverage.tsv" %(outdir), sample=SAMPLES),
-        infiles_ab=expand("%s/humann/{sample}_R1.qc.humanDecontaminated_pathabundance.tsv" %(outdir), sample=SAMPLES),
-        outdir="%s/humann/" %(outdir),
-    output:
-        gene_join="%s/humann/humann_genefamilies.tsv" %(outdir),
-        pathcov_join="%s/humann/humann_pathcoverage.tsv" %(outdir),
-        pathab_join="%s/humann/humann_pathabundance.tsv" %(outdir)
-    resources:
-        mem="75G",
-        cpus=config["n_cores"],
-        time="2:00:00"
-    log:
-        "%s/humann_combined_log.txt" %(outdir)
-    run:
-        #log the parameters for ease of writing papers
-        logging.info("parameters used")
-        logging.info("qtrim={}".format(config["qtrim"])),
-        logging.info("quality={}".format(config["quality"])),
-        logging.info("min_len={}".format(config["read_min_len"])),
-        logging.info("adaptors={}".format(config["adaptors"])),
-
-        # joins each normalized file
-        shell("humann_join_tables -i {input.outdir} -o {output.gene_join} --file_name R1.qc.humanDecontaminated_genefamilies")
-        shell("humann_join_tables -i {input.outdir} -o {output.pathcov_join} --file_name R1.qc.humanDecontaminated_pathcoverage")
-        shell("humann_join_tables -i {input.outdir} -o {output.pathab_join} --file_name R1.qc.humanDecontaminated_pathabundance")
-
-# Normalizes humann output by relative abundance
-rule humann_norm:
-    input:
-        gene="%s/humann/humann_genefamilies.tsv" %(outdir),
-        pathcov="%s/humann/humann_pathcoverage.tsv" %(outdir),
-        pathab="%s/humann/humann_pathabundance.tsv" %(outdir),
-    output:
-        gene_fam="%s/humann_genefamilies_relab.tsv" %(outdir),
-        coverage="%s/humann_pathcoverage_relab.tsv" %(outdir),
-        abundance="%s/humann_pathabundance_relab.tsv" %(outdir)
-    resources:
-        mem="300G",
-        cpus=config["n_cores"],
-        time="2:00:00"
-    run:
-        shell("humann_renorm_table -i {input.gene} -o {output.gene_fam} --units relab")
-        shell("humann_renorm_table -i {input.pathcov} -o {output.coverage} --units relab")
-        shell("humann_renorm_table -i {input.pathab} -o {output.abundance} --units relab")
-
-# Changes mapping of gene families to alternative groups
-rule humann_regroup:
-    input:
-        "%s/humann_genefamilies_relab.tsv" %(outdir),
-    output:
-        "%s/humann_genefamilies_relab_regroup.tsv" %(outdir),
-    resources:
-        mem="250G",
-        cpus=config["n_cores"],
-        time="3:00:00"
-    run:
-        shell("humann_regroup_table -i {input} -g uniref90_ko -e 10 -o {output}")
-
-# Renames rows to gene names
-rule humann_rename:
-    input:
-        "%s/humann_genefamilies_relab_regroup.tsv" %(outdir),
-    output:
-        "%s/humann_genefamilies_relab_rename.tsv" %(outdir)
-    resources:
-        mem="100G",
-        cpus=config["n_cores"],
-        time="2:00:00"
-    run:
-        shell("humann_rename_table -i {input} -n kegg-orthology -o {output}")
-
-rule meta_spades:
-    input:
-        R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
-        R2="%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir),
-    output:
-        dir=directory("%s/{sample}/{sample}_metaspades" %(outdir),),
-        scaffolds="%s/{sample}/{sample}_metaspades/scaffolds.fasta" %(outdir)
-    resources:
-        mem="64G",
-        cpus=16,
-        time="96:00:00"
-    run:
-        if config["skip_read_correction"]:
-            shell("spades.py --meta -t {resources.cpus} -1 {input.R1} -2 {input.R2} -o {output.dir} --only-assembler")
-        else:
-            shell("spades.py --meta -t {resources.cpus} -1 {input.R1} -2 {input.R2} -o {output.dir}")
-
-
-rule meta_spades_all:
-    input:
-        expand("%s/{sample}/{sample}_metaspades" %(outdir), sample=SAMPLES),
-        expand("%s/{sample}/{sample}_metaspades/scaffolds_BLASTDB.nhr" %(outdir), sample=SAMPLES),
-
-
-rule meta_spades_blastdb:
-    input:
-        scaffolds="%s/{sample}/{sample}_metaspades/scaffolds.fasta" %(outdir) 
-    output:
-        db="%s/{sample}/{sample}_metaspades/scaffolds_BLASTDB.nhr" %(outdir) 
-    run:
-        shell("makeblastdb -in {input.scaffolds} -dbtype nucl -out %s" %(output.db.replace(".nhr","")))
-
-
-if config["mode"] == "pe":
-    rule micop:
-        input:
-            R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
-            R2="%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir),
-        output:
-            sam="%s/{sample}/{sample}_micop_fungi.sam" %(outdir),
-            ab="%s/{sample}/{sample}_micop_fungi_abundance.tsv" %(outdir)
-        resources:
-            mem="32G",
-            time="12:00:00",
-            cpus=1
-        run:
-            shell("run-bwa.py {input.R1} {input.R2} --fungi --output {output.sam}")
-            shell("compute-abundances.py {output.sam} --fungi --output {output.ab}")
-elif config["mode"] == "se":
-    rule micop:
-        input:
-            R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
-        output:
-            sam="%s/{sample}/{sample}_micop_fungi.sam" %(outdir),
-        resources:
-            mem="32G",
-            time="12:00:00",
-            cpus=1
-        run:
-            shell("run-bwa.py {input.R1} --fungi --output {output.sam}")
-
-rule micop_raw:
-    input:
-        sam="%s/{sample}/{sample}_micop_fungi.sam" %(outdir),
-    output:
-        raw="%s/{sample}/{sample}_micop_fungi_abundance_rawcounts.tsv" %(outdir),
-        ab="%s/{sample}/{sample}_micop_fungi_abundance.tsv" %(outdir)
-    params:
-        min_map=50
-    run:
-        shell("compute-abundances.py {input} --fungi --output {output.ab} --min_map {params.min_map}")
-        shell("compute-abundances.py {input} --fungi --raw_counts --output {output.raw} --min_map {params.min_map}")
-
-
-rule micop_all:
-    input:
-        expand("%s/{sample}/{sample}_micop_fungi.sam" %(outdir), sample=SAMPLES),
-        expand("%s/{sample}/{sample}_micop_fungi_abundance.tsv" %(outdir), sample=SAMPLES),
-        expand("%s/{sample}/{sample}_micop_fungi_abundance_rawcounts.tsv" %(outdir), sample=SAMPLES)
-    output:
-        sam="%s/%s_micop_output.tsv" %(outdir, config["expt_name"]),
-        pickle="%s/%s_micop_output.p" %(outdir, config["expt_name"])
-    resources:
-            time="12:00:00",
-            cpus=12
-    shell:
-        "python Lib/combine_micop.py --indir %s --outdir %s --outfile {output.sam} --infile_pickle {output.pickle} --n_cpu {resources.cpus}" %(indir, outdir)
-
-rule micop_test:
-    input:
-        expand("%s/{sample}/{sample}_micop_fungi.sam" %(outdir), sample=SAMPLES),
-
 # searching for antibiotic resistance genes using the CARD -- should create marker file (takes several days) prior to running this rule with:
 # shortbred_identify.py --goi ./card_protein_fasta_protein_homolog_model.fasta --ref ./uniref90.fasta --markers shortbred_markers.faa --tmp shortbred_identify 
-# Run where snakefile is kept, change location of marker file in config.yaml
+# Make sure to note location of marker file in config.yaml
 
 rule shortbred_quantify:
     input:
@@ -481,7 +261,7 @@ rule shortbred_quantify:
         time="3:00:00"
     run:
         infile_db=config["markers"],
-        shell("~/.conda/envs/shortbred/bin/python2 shortbred/shortbred_quantify.py --markers %s --wgs {input} --results {output} --tmp {input}_tmp" %(infile_db))
+        shell("~/.conda/envs/shortbred/bin/python2 /dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/shortbred/shortbred_quantify.py --markers %s --wgs {input} --results {output} --tmp {input}_tmp" %(infile_db))
 
 rule shortbred_all:
     input:
@@ -521,35 +301,3 @@ rule rgi_all:
         artifact=expand("%s/RGI/{sample}.artifacts_mapping_stats.txt" %(outdir), sample=SAMPLES),
         overall=expand("%s/RGI/{sample}.overall_mapping_stats.txt" %(outdir), sample=SAMPLES),
         reference=expand("%s/RGI/{sample}.reference_mapping_stats.txt" %(outdir), sample=SAMPLES),
-
-# Generate collector's curves to estimate redundancy of reads for each sample
-rule nonpareil:
-    input:
-        "%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
-    params:
-        outdir=directory("%s/nonpareil/" %(outdir)),
-        tmp="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq" %(indir),
-    output:
-        red_sum="%s/nonpareil/{sample}/{sample}.npo" %(outdir),
-        red_val="%s/nonpareil/{sample}/{sample}.npa" %(outdir),
-        mates="%s/nonpareil/{sample}/{sample}.npc" %(outdir),
-        log="%s/nonpareil/{sample}/{sample}.npl" %(outdir),
-    resources:
-        mem="50G",
-        cpus=config["n_cores"],
-        time="24:00:00"
-    params:
-        ncores=config["n_cores"]
-    run:
-        if config["mode"] == "pe":
-            raise Exception('Not going to run nonpareil on R2')
-        shell("gunzip {input}")
-        shell("nonpareil -s {params.tmp} -T alignment -f fastq -b {params.outdir}/{sample} -t {resources.cpus} -R 5000", sample=SAMPLES)
-        shell("gzip {params.tmp}")
-
-rule nonpareil_all:
-    input:
-        red_sum=expand("%s/nonpareil/{sample}/{sample}.npo" %(outdir), sample=SAMPLES),
-        red_val=expand("%s/nonpareil/{sample}/{sample}.npa" %(outdir), sample=SAMPLES),
-        mates=expand("%s/nonpareil/{sample}/{sample}.npc" %(outdir), sample=SAMPLES),
-        log=expand("%s/nonpareil/{sample}/{sample}.npl" %(outdir), sample=SAMPLES),
