@@ -1,0 +1,7 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+Building DAG of jobs...
+ChildIOException:
+File/directory is a child to another output:
+('/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results/RGI', rgi_combine)
+('/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results/RGI/021021_01.allele_mapping_data.txt', rgi_bwt)

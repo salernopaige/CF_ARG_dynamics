@@ -1,0 +1,9 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+Building DAG of jobs...
+MissingInputException in line 34 of /dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile:
+Missing input files for rule all:
+/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/RGI
+/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/Li_metaphlan_combined_s.xlsx
+/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/counts_BFT_combined.csv
+/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/Li_metaphlan_combined_f.xlsx

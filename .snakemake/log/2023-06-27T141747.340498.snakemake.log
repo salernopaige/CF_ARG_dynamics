@@ -1,0 +1,10 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+Building DAG of jobs...
+InputFunctionException in line 305 of /dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile:
+Error:
+  AttributeError: 'Wildcards' object has no attribute 'sample'
+Wildcards:
+
+Traceback:
+  File "/dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile", line 307, in <lambda>

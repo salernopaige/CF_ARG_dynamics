@@ -1,0 +1,3 @@
+WorkflowError in line 17 of /dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile:
+Config file is not valid JSON or YAML. In case of YAML, make sure to not mix whitespace and tab indentation.
+  File "/dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile", line 17, in <module>

@@ -1,0 +1,23 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job counts:
+	count	jobs
+	823	rgi_bwt
+	1	rgi_combine
+	824
+Select jobs to execute...
+
+[Fri Jun 30 15:31:49 2023]
+rule rgi_bwt:
+    input: /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/SRR8353931/SRR8353931_R1.qc.humanDecontaminated.fastq.gz
+    output: /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/RGI/SRR8353931.allele_mapping_data.txt, /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/RGI/SRR8353931.gene_mapping_data.txt, /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/RGI/SRR8353931.artifacts_mapping_stats.txt, /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/RGI/SRR8353931.overall_mapping_stats.txt, /dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/RGI/SRR8353931.reference_mapping_stats.txt
+    jobid: 2185
+    wildcards: sample=SRR8353931
+    resources: mem=75G, cpus=4, time=48:00:00
+
+Terminating processes on user request, this might take some time.
+Complete log: /dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/.snakemake/log/2023-06-30T152956.056557.snakemake.log

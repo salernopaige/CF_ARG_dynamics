@@ -1,0 +1,5 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+NameError in line 308 of /dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile:
+name 'configfile' is not defined
+  File "/dartfs/rc/lab/R/RossB/SalernoP/CF_ARG_dynamics/Snakefile", line 308, in <module>

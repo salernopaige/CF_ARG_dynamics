@@ -1,0 +1,5 @@
+Wildcard constraints in inputs are ignored. (rule: sam_to_bam)
+Wildcard constraints in inputs are ignored. (rule: pileup)
+Building DAG of jobs...
+MissingRuleException:
+No rule to produce combine_rgi (if you use input functions make sure that they don't raise unexpected exceptions).
