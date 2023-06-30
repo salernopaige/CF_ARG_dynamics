@@ -1,16 +1,16 @@
 #expt_name: "dart_CF"
-#expt_name: "Hayden"
+expt_name: "Hayden"
 #expt_name: "Yassour"
 #expt_name: "Kostic"
 #expt_name: "Vatanen"
 #expt_name: "Backhed"
 #expt_name: "TEDDY"
 #expt_name: "Leonard"
-expt_name: "Li"
+#expt_name: "Li"
 
 #Input directories, where the fastq sequencing files are stored
 #indir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/ReadData/"
-#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/"
+indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/ReadData/"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/ReadData/"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/ReadData/"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/ReadData/"
@@ -18,11 +18,11 @@ expt_name: "Li"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/ReadData/"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/ReadData/"
 #indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/ReadData/"
-indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/ReadData/"
+#indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/ReadData/"
 
 #Output directories, where files are to be stored
 #outdir: "/dartfs/rc/lab/R/RossB/DartCF_infant_meta/Results/"
-#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/"
+outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Hayden2020/Results/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Yassour2016/Results/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Kostic2015/Results/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Vatanen2016/Results/"
@@ -30,7 +30,7 @@ indir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/ReadData/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Backhed2015/Results/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/TEDDY/Results/"
 #outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Leonard2021/Results/"
-outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/"
+#outdir: "/dartfs/rc/lab/R/RossB/OtherLabsPublished/Li2021/Results/"
 
 samples_sub:
 
@@ -50,8 +50,8 @@ human_genome: '/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/hg19.fa
 
 # Bowtie options
 n_mismatch: 1
-#DB_name: "BFT"
-#DB_path: "/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/BFT_isoforms.fasta"
+DB_name: "BFT"
+DB_path: "/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/BFT_isoforms.fasta"
 
 n_cores: 4
 
@@ -64,6 +64,18 @@ metaphlan_col: "relative_abundance" # Default is relative_abundance. Use estimat
 # Everything
 mode: "se"
 
-
 # Shortbred
 markers: "/dartfs/rc/lab/R/RossB/SalernoP/shotgun_metagenomics/Data/shortbred_markers.faa"
+
+#RGI
+columns:
+  - starting_column: "All Mapped Reads"
+    renamed_column: "Mapped_Reads"
+  - starting_column: "Average Percent Coverage"
+    renamed_column: "Avg_Percent_Coverage"
+  - starting_column: "Average Length Coverage (bp)"
+    renamed_column: "Avg_Length_Coverage"
+  - starting_column: "Average MAPQ (Completely Mapped Reads)"
+    renamed_column: "Avg_MAPQ"
+
+#common_columns: ["ARO Term", "ARO Accession", "Reference Model Type", "Reference DB", "Resistomes & Variants: Observed Pathogen(s)", "Drug Class", "Resistance Mechanism"]

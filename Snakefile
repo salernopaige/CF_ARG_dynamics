@@ -301,3 +301,17 @@ rule rgi_all:
         artifact=expand("%s/RGI/{sample}.artifacts_mapping_stats.txt" %(outdir), sample=SAMPLES),
         overall=expand("%s/RGI/{sample}.overall_mapping_stats.txt" %(outdir), sample=SAMPLES),
         reference=expand("%s/RGI/{sample}.reference_mapping_stats.txt" %(outdir), sample=SAMPLES),
+
+rule rgi_combine:
+    input:
+        expand("%s/RGI/{sample}.gene_mapping_data.txt" %(outdir), sample=SAMPLES),
+    output:
+        directory("%s/RGI/Final_Results" %(outdir))
+    params:
+        cols=config["columns"]
+    run:
+        # Create the output directory if it doesn't exist
+        os.makedirs(output[0], exist_ok=True)
+
+        col_args = ' '.join(['"{}:{}"'.format(col['starting_column'], col['renamed_column']) for col in params.cols])
+        shell("python Lib/combine_rgi.py -i {input} -o {output} -c {col_args}")
