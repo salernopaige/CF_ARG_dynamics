@@ -1,2 +1,4 @@
-# CF_ARG_dynamics
-Exploring the antibiotic resistance dynamics in infants with CF as well as non-CF infants using shotgun metagenomic sequencing data. 
+# Cystic Fibrosis Antibiotic Resistance Gene Dynamics
+Exploring the antibiotic resistance dynamics in infants with CF as well as non-CF infants using shotgun metagenomic sequencing data. We have longitudinal shotgun metagenomic sequencing data from 40 infants in the first three years of life, for a total of 190 samples. These samples have been explored by our lab previously and the results are currently on [BioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.539134v1). 
+
+Now, we will be expanding our findings by looking at **antibiotic resistance gene (ARG)** abundance in these samples. We will be doing so by using [RGI](https://github.com/arpcard/rgi), which is a software developed using the [Comprehensive Antibiotic Resistance Database (CARD)](https://card.mcmaster.ca/) to quantify ARGs. The methodology used in this project was inspired by [Li et al. 2021](https://www.sciencedirect.com/science/article/pii/S1931312821001451). 
