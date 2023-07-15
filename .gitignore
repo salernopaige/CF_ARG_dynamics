@@ -3,3 +3,4 @@
 .snakemake/incomplete/*
 .snakemake/tmp*
 .snakemake/locks*
+nohup.out
