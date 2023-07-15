@@ -35,9 +35,17 @@ rule all:
     input:
         expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
         expand("%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
-        expand("%s/counts_{DB_name}_combined.csv" %(outdir), DB_name=config["DB_name"]),
-        "%s/%s_metaphlan_combined_s.xlsx" %(outdir, config["expt_name"]),
-        "%s/%s_metaphlan_combined_f.xlsx" %(outdir, config["expt_name"]),
+        expand("%s/{sample}/{sample}_R1.qc.humanReads.fastq.gz" %(indir), sample=SAMPLES),
+        expand("%s/{sample}/{sample}_R2.qc.humanReads.fastq.gz" %(indir), sample=SAMPLES),
+        "%s/%s_metaphlan_combined_s_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_g_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_f_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_o_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_c_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_p_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_k_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        "%s/%s_metaphlan_combined_full_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
+        expand("%s/%s_counts_{DB_name}_combined.csv" %(outdir, config["expt_name"]), DB_name=config["DB_name"]),
         expand("%s/shortbred/{sample}_shortbred_results.txt" %(outdir), sample=SAMPLES),
         "%s/RGI/" %(outdir)
 

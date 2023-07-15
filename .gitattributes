@@ -1,0 +1,2 @@
+ref/** filter=lfs diff=lfs merge=lfs -text
+CARD/** filter=lfs diff=lfs merge=lfs -text
