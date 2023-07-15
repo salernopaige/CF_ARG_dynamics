@@ -3,3 +3,6 @@
 .snakemake/incomplete/*
 .snakemake/tmp*
 .snakemake/locks*
+nohup.out
+.nfs*
+logs_slurm/*
