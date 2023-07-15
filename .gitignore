@@ -1,0 +1,4 @@
+.snakemake/metadata/*
+.snakemake/log/*
+.snakemake/incomplete/*
+.snakemake/tmp*
