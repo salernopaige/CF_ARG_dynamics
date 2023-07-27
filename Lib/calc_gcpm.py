@@ -8,6 +8,7 @@ def calculate_gcpm(counts_table, lengths_table):
 
 	# Merge the dataframes
 	merged = pd.merge(gcpm_table, lengths_table, left_on='ARO Accession', right_on='ARO_Term')   
+	merged.drop(columns=['ARO_Term', 'Gene_Name'], inplace=True)
 
 	# ID columns with count information 
 	count_columns = [col for col in counts_table.columns if col.startswith("SRR") and col.endswith("_Mapped_Reads")]
@@ -30,15 +31,17 @@ def calculate_gcpm(counts_table, lengths_table):
  
         # Store the sum of GCPM values for each sample
 		gcpm_sum = merged[gcpm_name].sum()
+		gcpm_sum = round(gcpm_sum, 1)
 
 	    # Check if the sum of GCPM values for this sample is equal to 1e6
-		assert gcpm_sum == 1e6, f"Sum of GCPM values for {new_col_name} are equal to 1e6"
+		assert gcpm_sum == 1e6, f"Sum of GCPM values for {new_col_name} is {gcpm_sum}, not equal to 1e6"
 	
 		# Drop unwanted columns to get final table
-		gcpm_table.drop(columns=sample, inplace=True)
-		gcpm_table.drop(columns=ratio_name, inplace=True)
-
-	return(gcpm_table)
+		merged.drop(columns=sample, inplace=True)
+		merged.drop(columns=ratio_name, inplace=True)
+		print(merged.columns)
+	
+	return(merged)
 
 if __name__ == "__main__":
 	# Parse command-line arguments
