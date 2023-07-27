@@ -39,8 +39,7 @@ def calculate_gcpm(counts_table, lengths_table):
 		# Drop unwanted columns to get final table
 		merged.drop(columns=sample, inplace=True)
 		merged.drop(columns=ratio_name, inplace=True)
-		print(merged.columns)
-	
+			
 	return(merged)
 
 if __name__ == "__main__":
