@@ -24,7 +24,7 @@ def calculate_gcpm(counts_table, lengths_table):
 		gcpm_name = new_col_name + '_gcpm'
 
 		# Calculate the ratio of counts to gene length for each gene 
-		total_counts.loc[:, ratio_name] = merged[sample] / merged['Gene_Length']
+		merged[ratio_name] = merged[sample] / merged['Gene_Length']
 
 		# Calculate the sum of ratios for all genes
 		sum_ratios = merged[ratio_name].sum()
