@@ -2,11 +2,7 @@ import argparse
 import pandas as pd
 import numpy as np
 
-def calculate_gcpm(counts_table, lengths_table):
-	lengths_table['ARO_Term'] = lengths_table['ARO_Term'].str.strip()
-	counts_table['ARO Accession'] = counts_table['ARO Accession'].astype(str)
-	lengths_table['ARO_Term'] = lengths_table['ARO_Term'].astype(str)
-	
+def calculate_gcpm(counts_table, lengths_table):	
 	# Copy the counts_table to refill in later
 	gcpm_table=counts_table.copy()
 
@@ -31,8 +27,14 @@ def calculate_gcpm(counts_table, lengths_table):
 
 		# Calculate the 'gcpm' value for each gene
 		merged[gcpm_name] = (merged[ratio_name] * 1e6) / sum_ratios
+ 
+        # Store the sum of GCPM values for each sample
+		gcpm_sum = merged[gcpm_name].sum()
 
-		# Drop unwanted columns to get final table 
+	    # Check if the sum of GCPM values for this sample is equal to 1e6
+		assert gcpm_sum == 1e6, f"Sum of GCPM values for {new_col_name} are equal to 1e6"
+	
+		# Drop unwanted columns to get final table
 		gcpm_table.drop(columns=sample, inplace=True)
 		gcpm_table.drop(columns=ratio_name, inplace=True)
 
@@ -50,11 +52,14 @@ if __name__ == "__main__":
 	counts_table = pd.read_csv(args.counts_table).fillna(0)
 	count_columns = [col for col in counts_table.columns if col.startswith("SRR") and col.endswith("_Mapped_Reads")]
 	counts_table[count_columns] = counts_table[count_columns].apply(pd.to_numeric, errors='coerce')  # Convert numeric columns to numeric, non-numeric columns will remain as objects
-	gene_lengths_table = pd.read_csv(args.gene_lengths)
+	counts_table['ARO Accession'] = counts_table['ARO Accession'].astype(str)
 
 	# Remove "ARO:" prefix from "ARO_Term" column in gene_lengths_table
+	gene_lengths_table = pd.read_csv(args.gene_lengths)
 	gene_lengths_table["ARO_Term"] = gene_lengths_table["ARO_Term"].str.replace("ARO:", "")
 	gene_lengths_table["Gene_Length"] = pd.to_numeric(gene_lengths_table["Gene_Length"], errors='coerce')  # Convert "Gene_Length" column to numeric
+	gene_lengths_table['ARO_Term'] = gene_lengths_table['ARO_Term'].str.strip()
+	gene_lengths_table['ARO_Term'] = gene_lengths_table['ARO_Term'].astype(str)
 
 	# Calculate GCPM values
 	gcpm_table = calculate_gcpm(counts_table, gene_lengths_table)
