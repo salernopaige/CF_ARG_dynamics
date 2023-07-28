@@ -47,7 +47,10 @@ rule all:
         "%s/%s_metaphlan_combined_full_%s.xlsx" %(outdir, config["expt_name"], config["metaphlan_col"]),
         expand("%s/%s_counts_{DB_name}_combined.csv" %(outdir, config["expt_name"]), DB_name=config["DB_name"]),
         expand("%s/shortbred/{sample}_shortbred_results.txt" %(outdir), sample=SAMPLES),
-        "%s/RGI/" %(outdir)
+        "%s/RGI/" %(outdir),
+        "%s/RGI/Final_Results/Mapped_Reads.csv" %(outdir),
+        "%s/RGI/gene_lengths.txt" %(outdir),
+        "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"])
 
 # Makes links to the base library so that they are named consistently with the folder names
 # Snakemake works really well if we have files that go {sample}/{sample}.fastq.gz
@@ -187,73 +190,6 @@ rule metaphlan_combine:
         shell("python Lib/combine_metaphlan.py {input} -o {output.k} -t k -p %s -c %s" %(config["metaphlan_mode"], config["metaphlan_col"]))
         shell("python Lib/combine_metaphlan.py -i {output.s} -i {output.g} -i {output.f} -i {output.o} -i {output.c} -i {output.p} -i {output.k} -o {output.full} -m full_bind")            
 
-# Runs bowtie against the file in config.DB_path
-# This assumes that config.DB_path is a fasta file seqs.fasta or seqs.fa and that you made a bowtie database like so: bowtie2-build seqs.fa seqs
-rule bowtie:
-    input:
-        unpack(input_reads)
-    output:
-        "%s/{sample}/{sample}_Bowtie_{DB_name,[A-Za-z0-9]+}.sam" %(outdir)
-    params:
-        N_MISMATCH = config["n_mismatch"],
-        n_cores=config["n_cores"]
-    resources:
-        mem="4G",
-        cpus=config["n_cores"]
-    run:
-        # Remove the extension
-        infile_db = re.sub("\.[A-Za-z0-9]+","",config["DB_path"])
-        # The awk line removes unmapped reads, saving a huge amount of space
-        shell("bowtie2 -a -N {params.N_MISMATCH} -p {params.n_cores} -x %s -1 <(zcat {input.R1}) -2 <(zcat {input.R2})| awk -F \"\\t\" '$3 != \"*\"' > {output}" %(infile_db))
-
-# Combines the individual sam files into a csv of counts mapping to different genes
-rule bowtie_combine:
-    input:
-        expand("%s/{sample}/{sample}_Bowtie_{{DB_name}}.sam" %(outdir), sample = SAMPLES),
-    output:
-        "%s/%s_counts_{DB_name,[A-Za-z0-9]+}_combined.csv" %(outdir, config["expt_name"])
-    log:
-        "%s/bowtie_combined_{DB_name}_log.txt" %(outdir)
-    run:
-        #log the parameters for ease of writing papers
-
-        logging.info("parameters used")
-        logging.info("qtrim={}".format(config["qtrim"])),
-        logging.info("quality={}".format(config["quality"])),
-        logging.info("read_min_len={}".format(config["read_min_len"])),
-        logging.info("adaptors={}".format(config["adaptors"])),
-        logging.info("n_mismatch={}".format(config["n_mismatch"])),
-
-        shell("python Lib/parse_SAM.py {input} -f %s -o {output}" %(config["DB_path"]))
-
-rule bowtie_all:
-    input:
-        expand("%s/%s_counts_{DB_name}_combined.csv" %(outdir, config["expt_name"]), DB_name=config["DB_name"]),
-
-
-rule sam_to_bam:
-    input:
-        "%s/{sample}/{sample}_Bowtie_{DB_name,[A-Za-z0-9]+}.sam" %(outdir)
-    output:
-        "%s/{sample}/{sample}_Bowtie_{DB_name,[A-Za-z0-9]+}.bam" %(outdir)
-    run:
-        infile_fasta = config["DB_path"]
-        shell("samtools view -b -t %s {input} > {output}" %(infile_fasta))
-        shell("samtools sort {output} -o {output} -O bam")
-
-rule pileup:
-    input:
-        "%s/{sample}/{sample}_Bowtie_{DB_name,[A-Za-z0-9]+}.bam" %(outdir)
-    output:
-        "%s/{sample}/{sample}_Bowtie_{DB_name,[A-Za-z0-9]+}.pileup" %(outdir)
-    run:
-        infile_fasta = config["DB_path"]
-        shell("samtools mpileup --excl-flags UNMAP,QCFAIL,DUP -A -q0 -C0 -B -f %s {input} > {output}" %(infile_fasta))
-
-rule pileup_all:
-    input:
-        expand("%s/{sample}/{sample}_Bowtie_{DB_name}.pileup" %(outdir), sample = SAMPLES, DB_name=config["DB_name"])
-
 # searching for antibiotic resistance genes using the CARD -- should create marker file (takes several days) prior to running this rule with:
 # shortbred_identify.py --goi ./card_protein_fasta_protein_homolog_model.fasta --ref ./uniref90.fasta --markers shortbred_markers.faa --tmp shortbred_identify 
 # Make sure to note location of marker file in config.yaml
@@ -278,7 +214,7 @@ rule shortbred_all:
 # using RGI from CARD to search for ARGs
 # First load CARD database `rgi load --wildcard_annotation wildcard_database_vversion_number.fasta \
 #  --wildcard_index /dartfs/rc/lab/R/RossB/SalernoP/CARD/wildcard/index-for-model-sequences.txt \
-#  --card_annotation card_database_v3.1.4.fasta`
+#  --card_annotation card_database_v3.2.7.fasta`
 
 rule rgi_bwt:
     input:
@@ -322,4 +258,21 @@ rule rgi_combine:
         os.makedirs(output[0], exist_ok=True)
 
         col_args = ' '.join(['"{}:{}"'.format(col['starting_column'], col['renamed_column']) for col in params.cols])
-        shell("python Lib/combine_rgi.py -i {input} -o {output} -c {col_args}")
+        shell("python Lib/combine_mapped_reads.py -i {input} -o {output} -c {col_args}")
+
+rule calc_gene_lengths:
+    input:
+        files=config["fasta_files"]
+    output:
+        "%s/RGI/gene_lengths.txt" %(outdir)
+    run:
+        shell("python Lib/calc_gene_length.py -i {input.files} -o {output}")
+
+rule calc_gcpm:
+    input:
+        counts="%s/RGI/Final_Results/Mapped_Reads.csv" %(outdir),
+        lengths="%s/RGI/gene_lengths.txt" %(outdir)
+    output:
+        "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"])
+    run:
+        shell("python Lib/calc_gcpm.py -c {input.counts} -g {input.lengths} -o {output}")
