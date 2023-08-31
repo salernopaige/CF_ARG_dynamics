@@ -6,3 +6,14 @@
 nohup.out
 .nfs*
 logs_slurm/*
+kraken2/*
+kraken2_db/*
+kraken_db/*
+metaWRAP/*
+ncbi_nt/*
+ncbi_tax/*
+ref/*
+CARD/*
+checkm_db/*
+download_CARD_db.sh
+
