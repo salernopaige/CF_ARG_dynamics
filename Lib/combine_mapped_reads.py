@@ -13,7 +13,7 @@ def combine_rgi(sample_files, outdir, columns):
             renamed_column = column['renamed_column']
 
             # Extract the common columns
-            common_columns = ['ARO Term', 'ARO Accession', 'Reference Model Type', 'Reference DB', 'Resistomes & Variants: Observed Pathogen(s)', 'Drug Class', 'Resistance Mechanism']
+            common_columns = ['ARO Term', 'ARO Accession', 'Reference Model Type', 'Reference DB', 'Resistomes & Variants: Observed Pathogen(s)', 'AMR Gene Family', 'Drug Class', 'Resistance Mechanism']
             
             try:
                 # Check if the file exists and is non-empty

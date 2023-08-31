@@ -50,7 +50,12 @@ rule all:
         "%s/RGI/" %(outdir),
         "%s/RGI/Final_Results/Mapped_Reads.csv" %(outdir),
         "%s/RGI/gene_lengths.txt" %(outdir),
-        "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"])
+        "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"]),
+        "%s/metaWRAP/Assembly/" %(outdir),
+        "%s/metaWRAP/all_R1.fastq" %(outdir),
+        "%s/metaWRAP/all_R2.fastq" %(outdir)
+        # expand("%s/metaWRAP/Assembly/{sample}_assembled" %(outdir), sample=SAMPLES)
+
 
 # Makes links to the base library so that they are named consistently with the folder names
 # Snakemake works really well if we have files that go {sample}/{sample}.fastq.gz
@@ -131,7 +136,7 @@ def input_reads(wildcards):
         return {'R1':str(rare_indir) + "/{wildcards.sample}/{wildcards.sample}_R1.qc.humanDecontaminated.fastq.gz".format(wildcards=wildcards)}
     else:
         raise Exception('Invalid config["mode"]')
-        
+
 rule metaphlan:
     input:
         unpack(input_reads)
@@ -238,6 +243,7 @@ rule rgi_bwt:
             raise Exception('Not going to run RGI bwt on R2')
         shell("rgi bwt -1 {input.R1} -o {params.outdir}{wildcards.sample} -a kma -n 4 --clean --include_wildcard")
 
+# Allows you to run all rgi jobs without processing them further
 rule rgi_all:
     input:
         allele=expand("%s/RGI/{sample}.allele_mapping_data.txt" %(outdir), sample=SAMPLES),
@@ -246,11 +252,13 @@ rule rgi_all:
         overall=expand("%s/RGI/{sample}.overall_mapping_stats.txt" %(outdir), sample=SAMPLES),
         reference=expand("%s/RGI/{sample}.reference_mapping_stats.txt" %(outdir), sample=SAMPLES),
 
+# Combines all RGI gene mapping data outputs into one big file
+# Columns of interest can be designated in the config.yaml file
 rule rgi_combine:
     input:
         expand("%s/RGI/{sample}.gene_mapping_data.txt" %(outdir), sample=SAMPLES),
     output:
-        directory("%s/RGI/Final_Results" %(outdir))
+        directory("%s/RGI/Final_Results" %(outdir)),
     params:
         cols=config["columns"]
     run:
@@ -260,19 +268,42 @@ rule rgi_combine:
         col_args = ' '.join(['"{}:{}"'.format(col['starting_column'], col['renamed_column']) for col in params.cols])
         shell("python Lib/combine_mapped_reads.py -i {input} -o {output} -c {col_args}")
 
+# Calculates all the lengths of the genes in the CARD databases that are defined in the config.yaml file, only need to run once and is stored in Lib/
 rule calc_gene_lengths:
     input:
         files=config["fasta_files"]
     output:
-        "%s/RGI/gene_lengths.txt" %(outdir)
+        "Lib/gene_lengths.txt" 
     run:
         shell("python Lib/calc_gene_length.py -i {input.files} -o {output}")
 
+# Calculates GCPM values based on Reads Mapped in the RGI output tables
 rule calc_gcpm:
     input:
         counts="%s/RGI/Final_Results/Mapped_Reads.csv" %(outdir),
-        lengths="%s/RGI/gene_lengths.txt" %(outdir)
+        lengths="Lib/gene_lengths.txt"
     output:
         "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"])
     run:
         shell("python Lib/calc_gcpm.py -c {input.counts} -g {input.lengths} -o {output}")
+
+# Rules for MAG assembly and analysis
+rule assemble_mags:
+    input:
+        all_R1=expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
+        all_R2=expand("%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
+    output:
+        assembly=directory("%s/metaWRAP/Assembly/" %(outdir)),
+        R1_cat="%s/metaWRAP/all_R1.fastq" %(outdir),
+        R2_cat="%s/metaWRAP/all_R2.fastq" %(outdir)
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    run:
+        shell("""
+            cat {input.all_R1} > {output.R1_cat}
+            cat {input.all_R2} > {output.R2_cat}
+            metawrap assembly -1 {output.R1_cat} -2 {output.R2_cat} -m 200 -t 96 --metaspades -o {output.assembly}
+        """)
+        

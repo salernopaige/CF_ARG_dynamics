@@ -11,13 +11,13 @@ def calculate_gcpm(counts_table, lengths_table):
 	merged.drop(columns=['ARO_Term', 'Gene_Name'], inplace=True)
 
 	# ID columns with count information 
-	count_columns = [col for col in counts_table.columns if col.startswith("SRR") and col.endswith("_Mapped_Reads")]
+	count_columns = [col for col in counts_table.columns if col.endswith("_Mapped_Reads")]
 
 	# Calculate total counts for each sample
 	for sample in count_columns:
 		# Split sample name for new column names 
-		new_col_name = sample.split('_')[0]
-		ratio_name = new_col_name + '_ratio'		
+		new_col_name = '_'.join(sample.split('_')[:-2])
+		ratio_name = new_col_name + '_ratio'
 		gcpm_name = new_col_name + '_gcpm'
 
 		# Calculate the ratio of counts to gene length for each gene 
@@ -39,7 +39,7 @@ def calculate_gcpm(counts_table, lengths_table):
 		# Drop unwanted columns to get final table
 		merged.drop(columns=sample, inplace=True)
 		merged.drop(columns=ratio_name, inplace=True)
-			
+
 	return(merged)
 
 if __name__ == "__main__":
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 	counts_table['ARO Accession'] = counts_table['ARO Accession'].astype(str)
 
 	# Remove "ARO:" prefix from "ARO_Term" column in gene_lengths_table
-	gene_lengths_table = pd.read_csv(args.gene_lengths)
+	gene_lengths_table = pd.read_csv(args.gene_lengths, delimiter='\t')
 	gene_lengths_table["ARO_Term"] = gene_lengths_table["ARO_Term"].str.replace("ARO:", "")
 	gene_lengths_table["Gene_Length"] = pd.to_numeric(gene_lengths_table["Gene_Length"], errors='coerce')  # Convert "Gene_Length" column to numeric
 	gene_lengths_table['ARO_Term'] = gene_lengths_table['ARO_Term'].str.strip()
