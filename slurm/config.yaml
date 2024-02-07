@@ -1,4 +1,4 @@
-jobs: 40
+jobs: 1000
 cluster: "sbatch --time {resources.time} --mem={resources.mem} --cpus-per-task {resources.cpus} -o logs_slurm/{rule}_{wildcards} -e logs_slurm/{rule}_{wildcards} --mail-type=FAIL,END --mail-user=paige.salerno.gr@dartmouth.edu"
 default-resources: [cpus=1, mem="1G", time="00:60:00"]
 latency-wait: 60

@@ -53,9 +53,13 @@ rule all:
         "%s/RGI/Final_Results/%s_GCPM_Results.csv" %(outdir, config["expt_name"]),
         "%s/metaWRAP/Assembly/" %(outdir),
         "%s/metaWRAP/all_R1.fastq" %(outdir),
-        "%s/metaWRAP/all_R2.fastq" %(outdir)
-        # expand("%s/metaWRAP/Assembly/{sample}_assembled" %(outdir), sample=SAMPLES)
-
+        "%s/metaWRAP/all_R2.fastq" %(outdir),
+        expand("%s/{sample}/{sample}_metaspades" %(outdir), sample=SAMPLES),
+        expand("%s/RGI/{sample}.MAG.summary.txt" %(outdir), sample=SAMPLES),
+        expand("%s/metaWRAP/Initial_Binning/{sample}" %(outdir), sample=SAMPLES),
+        expand("%s/RGI/MAG/{sample}/{sample}_arg_counts.txt" %(outdir), sample=SAMPLES),
+        expand("%s/RGI/MAG/{sample}/{sample}_GCPM.txt" %(outdir), sample=SAMPLES),
+        "%s/RGI/MAG/GCPM_Final_Results.csv" %(outdir),
 
 # Makes links to the base library so that they are named consistently with the folder names
 # Snakemake works really well if we have files that go {sample}/{sample}.fastq.gz
@@ -74,7 +78,6 @@ rule make_read_links:
         assert len(infiles_R2) == 1, "There should be exactly 1 R2.fastq.gz file, I found {}".format(len(infiles_R2))
         shell("ln -s %s {output.R1}" %(infiles_R1[0]))
         shell("ln -s %s {output.R2}" %(infiles_R2[0]))
-
 
 # Does some quality filtering and removes adaptors
 # The sequencing center might have already removed the adaptors, but it dosen't hurt to be sure
@@ -244,7 +247,7 @@ rule rgi_bwt:
         shell("rgi bwt -1 {input.R1} -o {params.outdir}{wildcards.sample} -a kma -n 4 --clean --include_wildcard")
 
 # Allows you to run all rgi jobs without processing them further
-rule rgi_all:
+rule rgi_bwt_all:
     input:
         allele=expand("%s/RGI/{sample}.allele_mapping_data.txt" %(outdir), sample=SAMPLES),
         gene=expand("%s/RGI/{sample}.gene_mapping_data.txt" %(outdir), sample=SAMPLES),
@@ -254,7 +257,7 @@ rule rgi_all:
 
 # Combines all RGI gene mapping data outputs into one big file
 # Columns of interest can be designated in the config.yaml file
-rule rgi_combine:
+rule rgi_bwt_combine:
     input:
         expand("%s/RGI/{sample}.gene_mapping_data.txt" %(outdir), sample=SAMPLES),
     output:
@@ -287,8 +290,10 @@ rule calc_gcpm:
     run:
         shell("python Lib/calc_gcpm.py -c {input.counts} -g {input.lengths} -o {output}")
 
-# Rules for MAG assembly and analysis
-rule assemble_mags:
+## Rules for MAG assembly and analysis
+# NOTE: In order to run Snakemake and metaWRAP at this time, you will need to develop a separate conda environment for snakemake v6.0.3, and add the snakemake executable to your PATH
+# Snakemake requires python3 but this version of metaWRAP (v1.3.2) uses python2 is written using python2
+rule joint_mag_assembly:
     input:
         all_R1=expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
         all_R2=expand("%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
@@ -298,7 +303,7 @@ rule assemble_mags:
         R2_cat="%s/metaWRAP/all_R2.fastq" %(outdir)
     resources:
         mem="75G",
-        cpus=config["n_cores"],
+        cpus=16,
         time="96:00:00"
     run:
         shell("""
@@ -306,4 +311,92 @@ rule assemble_mags:
             cat {input.all_R2} > {output.R2_cat}
             metawrap assembly -1 {output.R1_cat} -2 {output.R2_cat} -m 200 -t 96 --metaspades -o {output.assembly}
         """)
+
+rule single_mag_assembly:
+    input:
+        R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
+        R2="%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir),
+    output:
+        assembly=directory("%s/{sample}/{sample}_metaspades" %(outdir),),
+    resources:
+        mem="500G",
+        cpus=24,
+        time="120:00:00"
+    run:
+        shell("spades.py --meta -t {resources.cpus} -1 {input.R1} -2 {input.R2} -o {output.assembly}")
+
+rule single_mags:
+    input:
+        expand("%s/{sample}/{sample}_metaspades" %(outdir), sample=SAMPLES)
+
+## Running RGI on MAG assemblies rather than running on raw metagenomic reads
+rule rgi_main:
+    input:
+        "%s/{sample}/{sample}_metaspades/contigs.fasta" %(outdir),
+    output:
+        "%s/RGI/MAG/{sample}/{sample}.MAG.summary.txt" %(outdir),
+    resources:
+        mem="200G",
+        time="5:00:00"
+    params:
+        ncores=config["n_cores"],
+        outfile="%s/RGI/MAG/{sample}/{sample}.MAG.summary" %(outdir),
+    run:
+        shell("rgi main -i {input} -o {params.outfile} -n 32 --clean --local")
+
+# Allows you to run all rgi jobs without processing them further
+rule rgi_main_all:
+    input:
+        expand("%s/RGI/MAG/{sample}/{sample}.MAG.summary.txt" %(outdir), sample=SAMPLES),
+
+### Running Bowtie2 on the reads to map them to the predicted genes
+rule run_bowtie2_mags:
+    input:
+        rgi="%s/RGI/MAG/{sample}/{sample}.MAG.summary.txt" %(outdir),
+        R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
+        R2="%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir),
+    output:
+        fasta="%s/RGI/MAG/{sample}/{sample}_arg_sequences.fasta" %(outdir),
+        idxstats="%s/RGI/MAG/{sample}/{sample}_arg_counts.txt" %(outdir),
+    resources:
+        mem="125G",
+        time="2:00:00"
+    params:
+        ncores=config["n_cores"],
+        outdir="%s/RGI/MAG/{sample}" %(outdir),
+    run:
+        shell("./Lib/run_bowtie_mags.sh {input.rgi} {input.R1} {input.R2} {wildcards.sample} {params.outdir}")
+
+rule all_bowtie2_mags:
+    input:
+        expand("%s/RGI/MAG/{sample}/{sample}_arg_counts.txt" %(outdir), sample=SAMPLES),
+
+### Calculating GCPM for MAGs and combining GCPM values for every sample 
+rule calculate_mag_gcpm:
+    input:
+        "%s/RGI/MAG/{sample}/{sample}_arg_counts.txt" %(outdir),
+    output:
+        "%s/RGI/MAG/{sample}/{sample}_GCPM.txt" %(outdir),
+    shell:
+        "python Lib/calc_mag_gcpm.py -i {input} -o {output} -s {wildcards.sample} &&"
+        "[ -f {output} ] || touch {output}"
+
+rule combine_mag_gcpm:
+    input:
+        expand("%s/RGI/MAG/{sample}/{sample}_GCPM.txt" %(outdir), sample=SAMPLES),
+    output:
+        "%s/RGI/MAG/GCPM_Final_Results.csv" %(outdir),
+    shell:
+        "python Lib/combine_mag_gcpm.py -i {input} -o {output}"
         
+# # Bin MAG assemblies into species 
+# rule bin_mags:
+#     input:
+#         assembly="%s/{sample}/{sample}_metaspades/contigs.fasta" %(outdir),
+#         reads=expand("%s/{sample}/{sample}_*.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
+#     output:
+#         directory("%s/metaWRAP/Initial_Binning/{sample}" %(outdir)),
+#     params:
+#         ncores=config["n_cores"]
+#     run:
+#         shell(metawrap binning -o {output} -t 96 -a {input.assembly} --metabat2 --maxbin2 --concoct {input.reads})
