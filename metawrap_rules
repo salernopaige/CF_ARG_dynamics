@@ -1,0 +1,157 @@
+rule all:
+    "%s/metaWRAP/Assembly/" %(outdir),
+    "%s/metaWRAP/Assembly/{sample}_metaspades" %(outdir),
+    "%s/metaWRAP/Initial_Binning/metabat2_bins/" %(outdir),
+    "%s/metaWRAP/Initial_Binning/maxbin2_bins/" %(outdir),
+    "%s/metaWRAP/Initial_Binning/concoct_bins/" %(outdir),
+    "%s/metaWRAP/Bin_Refinement/metawrap_%s_%s_bins/" %(outdir, config["coverage"], config["contamination"]),
+    "%s/metaWRAP/Bin_Reassembly/reassembled_bins/" %(outdir),
+    "%s/metaWRAP/Bin_Classification/bin_taxonomy.tab" %(outdir),
+    "%s/metaWRAP/Functional_Annot/"
+
+rule joint_mag_assembly:
+    input:
+        all_R1=expand("%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
+        all_R2=expand("%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir), sample=SAMPLES),
+    output:
+        assembly=directory("%s/metaWRAP/Assembly/" %(outdir)),
+        R1_cat="%s/metaWRAP/all_R1.fastq" %(outdir),
+        R2_cat="%s/metaWRAP/all_R2.fastq" %(outdir)
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    run:
+        shell("""
+            cat {input.all_R1} > {output.R1_cat}
+            cat {input.all_R2} > {output.R2_cat}
+            metawrap assembly -1 {output.R1_cat} -2 {output.R2_cat} -m 200 -t 96 --metaspades -o {output.assembly}
+        """)
+
+rule single_mag_assembly:
+    input:
+        R1="%s/{sample}/{sample}_R1.qc.humanDecontaminated.fastq.gz" %(indir),
+        R2="%s/{sample}/{sample}_R2.qc.humanDecontaminated.fastq.gz" %(indir),
+    output:
+        assembly=directory("%s/metaWRAP/Assembly/{sample}_metaspades" %(outdir), sample=SAMPLES),
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    run:
+        shell("metawrap assembly -1 {input.R1} -2 {input.R2} -m 200 -t 96 --use-metaspades -o {output.assembly}")
+
+rule single_mags:
+    input:
+        expand("%s/metaWRAP/Assembly/{sample}_metaspades" %(outdir), sample=SAMPLES)
+
+rule bin_mags:
+    input:
+        assembly="%s/{sample}/{sample}_metaspades/contigs.fasta" %(outdir),
+        reads=expand("%s/{sample}/{sample}_*.qc.humanDecontaminated.fastq.gz" %(indir)),
+    output:
+        directory("%s/metaWRAP/Initial_Binning/{sample}" %(outdir)),
+    params:
+        ncores=config["n_cores"]
+    run:
+        shell(metawrap binning -o {output} -t 96 -a {input.assembly} --metabat2 {input.reads})
+        shell(metawrap binning -o {output} -t 96 -a {input.assembly} --maxbin2 {input.reads})
+        shell(metawrap binning -o {output} -t 96 -a {input.assembly} --concoct {input.reads})
+
+rule refine_bins:
+    input:
+        metabat=directory("%s/metaWRAP/Initial_Binning/{sample}/metabat2_bins/" %(outdir)),
+        maxbin=directory("%s/metaWRAP/Initial_Binning/{sample}/maxbin2_bins/" %(outdir)),
+        concoct=directory("%s/metaWRAP/Initial_Binning/{sample}/concoct_bins/" %(outdir)),
+    output:
+        directory("%s/metaWRAP/Bin_Refinement/{sample}" %(outdir)),
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    params:
+        ncores=config["n_cores"]
+        coverage=config["coverage"]
+        contam=config["contamination"]
+    run:
+        shell(metawrap bin_refinement -o {output} -t 96 -A {input.metabat} -B {input.maxbin} -C {input.concoct} -c {params.coverage} -x {params.contam})
+
+rule quant_bins:
+    input:
+        assembly="%s/{sample}/{sample}_metaspades/final_assembly.fasta" %(outdir),
+        reads=expand("%s/{sample}/{sample}_*.qc.humanDecontaminated.fastq.gz" %(indir)),
+        bins="%s/metaWRAP/Bin_Refinement/{sample}/metawrap_%s_%s_bins" %(outdir, config["coverage"], config["contamination"]),
+    output:
+        directory("%s/metaWRAP/Quant_Bins/"),
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+   params:
+        ncores=config["ncores"]
+    run:
+        shell(metawrap quant_bins -b {input.bins} -o {output} -a {input.assembly} {input.reads})
+
+rule reassemble_bins:
+    input:
+        R1_cat="%s/metaWRAP/all_R1.fastq" %(outdir),
+        R2_cat="%s/metaWRAP/all_R2.fastq" %(outdir),
+        bins="%s/metaWRAP/Bin_Refinement/metawrap_%s_%s_bins" %(outdir, config["coverage"], config["contamination"]),
+    output:
+        directory("%s/metaWRAP/Bin_Reassembly/"),
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    params:
+        ncores=config["ncores"]
+        coverage=config["coverage"]
+        contam=config["contamination"]
+    run:
+        shell(metawrap reassemble_bins -o {output} -1 {input.R1_cat} -2 {input.R2_cat} -t 96) -m 800 -c {params.coverage} -x {params.contam} -b {input.bins}
+
+rule classify_bins:
+    input:
+        bins=directory("%s/metaWRAP/Bin_Reassembly/reassembled_bins" %(outdir)),
+    output:
+        directory("%s/metaWRAP/Bin_classification" %(outdir)),
+    resources:
+        mem="75G",
+        cpus=config["n_cores"],
+        time="96:00:00"
+    params:
+        ncores=config["n_cores"]
+    run:
+        shell(metawrap classify_bins -b {input.bins} -o {output} -t 48)
+
+rule annotate_bins:
+    input:
+        unpack("%s/metaWRAP/Bin_Reassembly/reassembled_bins/" %(outdir)),
+    output:
+        directory("%s/metaWRAP/Functional_Annot/" %(outdir))
+    resources:
+        mem="75G",
+        time="96:00:00"
+    params:
+        ncores=config["n_cores"]
+    run:
+        shell(metaWRAP annotate_bins -o {output} -t 96 -b {input})
+
+
+rule rgi_main:
+    input:
+        "%s/{sample}/{sample}_metaspades/contigs.fasta" %(outdir),
+    output:
+        "%s/RGI/{sample}_MAG" %(outdir),
+    resources:
+        mem="75G",
+        time="48:00:00"
+    params:
+        ncores=config["n_cores"]
+    run:
+        shell("rgi main --input_sequence {input} -output_file {output} -n 32 --clean --include_wildcard")
+
+# Allows you to run all rgi jobs without processing them further
+rule rgi_main_all:
+    input:
+        expand("%s/RGI/{sample}_MAG.summary.txt" %(outdir), sample=SAMPLES),
